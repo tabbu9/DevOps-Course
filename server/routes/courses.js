@@ -7,14 +7,14 @@ const DATA_DIR = path.join(__dirname, '../courses-data');
 
 /**
  * GET /api/courses/topics
- * Returns: ["docker","kubernetes", ...]
+ * Returns: ["aws","docker","kubernetes", ...]
  * (Plain array so the frontend can do topics.map(...) directly.)
  */
 router.get('/topics', (_req, res) => {
   try {
     const files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json'));
     const topics = files.map(f => path.basename(f, '.json'));
-    return res.json(topics); // <-- return an ARRAY, not { topics }
+    return res.json(topics);
   } catch (err) {
     console.error('[courses] topics error:', err);
     return res.status(500).json({ error: 'Failed to read topics' });

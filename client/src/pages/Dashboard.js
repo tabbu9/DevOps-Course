@@ -1,70 +1,82 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Box, SimpleGrid, Heading, Text, Button, useToast
+  Box, Heading, SimpleGrid, Card, CardBody, Text, Button, HStack, Spinner
 } from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FaDocker, FaAws, FaCubes, FaServer, FaCogs } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+import { getTopics } from '../api/courses';
+import { FiSettings } from 'react-icons/fi';
 
-const icons = {
-  docker: FaDocker,
-  kubernetes: FaCubes,
-  aws: FaAws,
-  sonarqube: FaServer,
-  jenkins: FaCogs
-};
+function titleize(slug) {
+  return slug
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
 
-const MotionButton = motion(Button);
-
-const Dashboard = ({ user }) => {
+export default function Dashboard() {
   const [topics, setTopics] = useState([]);
-  const navigate = useNavigate();
-  const toast = useToast();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('/api/courses/topics')
-      .then(res => res.json())
-      .then(setTopics);
+    (async () => {
+      try {
+        const list = await getTopics(); // ["aws","docker",...]
+        setTopics(list);
+      } catch (e) {
+        setError(e.message || 'Failed to load topics');
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
+  if (loading) {
+    return (
+      <Box py={16} textAlign="center">
+        <Spinner size="lg" />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box py={10} textAlign="center" color="red.500">
+        {error}
+      </Box>
+    );
+  }
+
   return (
-    <Box maxW="6xl" mx="auto" mt={8} p={4}>
-      <Heading mb={8} color="teal.700" textAlign="center" fontWeight="bold">
-        Welcome {user.name}, Explore DevOps Courses!
+    <Box px={{ base: 4, md: 8 }} py={10}>
+      <Heading textAlign="center" mb={8}>
+        Welcome Syed, Explore DevOps Courses!
       </Heading>
-      <SimpleGrid columns={[1, 2, 3]} spacing={8}>
-        {topics.map(t => {
-          const Icon = icons[t.key] || FaCogs;
-          return (
-            <Box
-              key={t.key}
-              bg="white"
-              borderRadius="lg"
-              boxShadow="xl"
-              p={8}
-              textAlign="center"
-              transition="transform 0.2s"
-              _hover={{ transform: "scale(1.04)", boxShadow: "2xl" }}
-            >
-              <Icon size={48} color="#319795" style={{ marginBottom: 16 }} />
-              <Heading size="md" mb={2}>{t.label}</Heading>
-              <Text mb={4}>Learn {t.label} from basics to advanced with interactive subtopics.</Text>
-              <MotionButton
+
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={8}>
+        {topics.map((t) => (
+          <Card key={t} shadow="lg" borderRadius="2xl" _hover={{ transform: 'translateY(-4px)' }} transition="all .2s">
+            <CardBody>
+              <HStack spacing={4} mb={3}>
+                <FiSettings size={28} />
+                <Heading size="md">{titleize(t)}</Heading>
+              </HStack>
+              <Text color="gray.600" mb={6}>
+                Learn from basics to advanced with interactive subtopics.
+              </Text>
+              <Button
+                as={Link}
+                to={`/courses/${t}`}
                 colorScheme="teal"
-                size="lg"
-                whileTap={{ scale: 0.9 }}
-                onClick={() => navigate(`/topics/${t.key}`)}
-                _hover={{ bg: "teal.600", boxShadow: "lg", transform: "scale(1.06)" }}
-                transition="all 0.2s"
+                size="sm"
               >
-                Explore {t.label}
-              </MotionButton>
-            </Box>
-          )
-        })}
+                Explore
+              </Button>
+            </CardBody>
+          </Card>
+        ))}
       </SimpleGrid>
     </Box>
   );
-};
-
-export default Dashboard;
+}

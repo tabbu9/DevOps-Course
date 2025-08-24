@@ -35,7 +35,11 @@ function App() {
   );
 
   return (
-    <Box bgGradient="linear(to-br, teal.100, blue.50)" minH="100vh">
+    <Box
+      bgGradient="linear(to-br, teal.50, cyan.100)"
+      bgAttachment="fixed"
+      minH="100vh"
+    >
       <Navbar user={user} setUser={setUser} />
       <Routes>
         <Route path="/" element={
